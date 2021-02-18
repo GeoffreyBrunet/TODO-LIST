@@ -11,6 +11,9 @@ rocket = "0.4.7"
 diesel = { version = "1.4.5", features = ["postgres"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 dotenv = "0.15.0"
+r2d2 = "0.8.9"
+r2d2-diesel = "1.0.0"
+serde_derive = "1.0.123"
 
 [dependencies.rocket_contrib]
 version = "*"
