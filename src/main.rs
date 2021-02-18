@@ -1,7 +1,7 @@
 #![feature(decl_macro, proc_macro_hygiene)]
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate diesel;
-#[macro_use] extern crate serde_derive;
+extern crate serde_derive;
 extern crate dotenv;
 extern crate r2d2;
 extern crate r2d2_diesel;
@@ -9,14 +9,31 @@ extern crate rocket_contrib;
 
 use diesel::pg::PgConnection;
 use diesel::Connection;
-use diesel::prelude::*;
+use diesel::{Queryable, Insertable};
 use dotenv::dotenv;
 use rocket::response::content;
+use rocket_contrib::json::Json;
 use std::env;
+use serde_derive::{Serialize, Deserialize};
 
-pub mod connection;
-pub mod schema;
-pub mod models;
+mod connection;
+mod schema;
+use crate::schema::todolist;
+
+#[derive(Queryable, Serialize)]
+struct Todo {
+    id: i32,
+    title: String,
+    description: String,
+    deadline: String,
+    done: bool
+}
+
+#[derive(Insertable, Deserialize)]
+#[table_name = "todolist"]
+struct NewTodo {
+    title: String
+}
 
 #[get("/")]
 fn index() -> content::Json<&'static str> {
@@ -45,8 +62,8 @@ fn post_todo() -> content::Json<&'static str> {
     content::Json("{ 'hi': 'todo' }")
 }
 
-#[put("/todo/<id>", format = "application/json")]
-fn put_todo(id: u32) -> content::Json<&'static str> {
+#[put("/todo", data = "new_todo")]
+fn put_todo(new_todo: Json<NewTodo>) -> Json<Todo> {
     content::Json("{ 'hi': 'todo' }")
 }
 
