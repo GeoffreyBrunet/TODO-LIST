@@ -9,9 +9,14 @@ extern crate rocket_contrib;
 
 use diesel::pg::PgConnection;
 use diesel::Connection;
+use diesel::prelude::*;
 use dotenv::dotenv;
 use rocket::response::content;
 use std::env;
+
+pub mod connection;
+pub mod schema;
+pub mod models;
 
 #[get("/")]
 fn index() -> content::Json<&'static str> {
@@ -62,6 +67,7 @@ pub fn establish_connection() -> PgConnection {
 
 fn main() {
     rocket::ignite()
+        .manage(connection::init_pool())
         .mount("/", routes![index,
         get_todo,
         get_todo_by_id,
