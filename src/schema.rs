@@ -1,5 +1,5 @@
 table! {
-    todo (id) {
+    todolist (id) {
         id -> Int4,
         title -> Varchar,
         description -> Varchar,

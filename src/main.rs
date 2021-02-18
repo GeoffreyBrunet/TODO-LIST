@@ -7,11 +7,11 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rocket_contrib;
 
+use diesel::pg::PgConnection;
+use diesel::Connection;
 use dotenv::dotenv;
 use rocket::response::content;
-
-//mod schema;
-//mod connection;
+use std::env;
 
 #[get("/")]
 fn index() -> content::Json<&'static str> {
@@ -50,8 +50,17 @@ fn delete_todo(id: u32) -> content::Json<&'static str> {
     content::Json("{ 'hi': 'todo' }")
 }
 
-fn main() {
+pub fn establish_connection() -> PgConnection {
     dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url))
+}
+
+fn main() {
     rocket::ignite()
         .mount("/", routes![index,
         get_todo,
