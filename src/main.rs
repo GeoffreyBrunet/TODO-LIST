@@ -1,24 +1,21 @@
 #![feature(decl_macro, proc_macro_hygiene)]
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate diesel;
-extern crate serde_derive;
-extern crate dotenv;
-extern crate r2d2;
-extern crate r2d2_diesel;
 extern crate rocket_contrib;
 
-use diesel::pg::PgConnection;
-use diesel::Connection;
-use diesel::{Queryable, Insertable};
-use dotenv::dotenv;
+mod schema;
+
+use crate::schema::todolist;
+use rocket::{get, post, put, routes};
 use rocket::response::content;
 use rocket_contrib::json::Json;
-use std::env;
-use serde_derive::{Serialize, Deserialize};
+use rocket_contrib::databases::{database, diesel::PgConnection};
+use diesel::{Queryable, Insertable};
+use diesel::prelude::*;
+use serde::{Serialize, Deserialize};
 
-mod connection;
-mod schema;
-use crate::schema::todolist;
+#[database("postgres")]
+struct DbConn(PgConnection);
 
 #[derive(Queryable, Serialize)]
 struct Todo {
@@ -63,28 +60,21 @@ fn post_todo() -> content::Json<&'static str> {
 }
 
 #[put("/todo", data = "new_todo")]
-fn put_todo(new_todo: Json<NewTodo>) -> Json<Todo> {
-    content::Json("{ 'hi': 'todo' }")
+fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
+    let result = diesel::insert_into(todo::table)
+        .values(&new_todo.0)
+        .get_result(&*Conn)
+        .unwrap();
 }
 
 #[delete("/todo/<id>")]
 fn delete_todo(id: u32) -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'todo' }")
-}
-
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
+        content::Json("{ 'hi': 'todo' }")
 }
 
 fn main() {
     rocket::ignite()
-        .manage(connection::init_pool())
+        .attach(DbConn::fairing())
         .mount("/", routes![index,
         get_todo,
         get_todo_by_id,
