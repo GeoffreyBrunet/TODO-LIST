@@ -38,8 +38,12 @@ fn index() -> content::Json<&'static str> {
 }
 
 #[get("/todo")]
-fn get_todo() -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'todo' }")
+fn get_todo(conn: DbConn) -> Json<Vec<Todo>> {
+    let todos = todo::table
+    .order(todo::columns::id.desc())
+        .load::<Todo>(&*conn)
+        .unwrap();
+    Json(todos)
 }
 
 #[get("/todo/<id>")]
