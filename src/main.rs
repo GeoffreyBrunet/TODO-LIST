@@ -7,7 +7,6 @@ mod schema;
 
 use crate::schema::todo;
 use rocket::{get, post, put, routes};
-use rocket::response::content;
 use rocket_contrib::json::Json;
 use rocket_contrib::databases::{database, diesel::PgConnection};
 use diesel::{Queryable, Insertable};
@@ -36,37 +35,37 @@ struct NewTodo {
 }
 
 #[get("/")]
-fn index() -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'world' }")
+fn index() -> Json<&'static str> {
+    Json("{ 'hi': 'world' }")
 }
 
 #[get("/todo")]
 fn get_todo(conn: DbConn) -> Json<Vec<Todo>> {
     let todos = todo::table
-    .order(todo::columns::id.desc())
+        .order(todo::columns::id.desc())
         .load::<Todo>(&*conn)
         .unwrap();
     Json(todos)
 }
 
 #[get("/todo/<id>")]
-fn get_todo_by_id(id: u32) -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'todo id' }")
+fn get_todo_by_id(conn: DbConn, id: i32) -> Json<Vec<Todo>> {
+    let todos = todo::table
+        .order(todo::columns::id.desc())
+        .filter(todo::id.eq(id))
+        .load::<Todo>(&*conn)
+        .unwrap();
+    Json(todos)
 }
 
 // GET /todo?date=20210215
 
 /*#[get("/todo?date=<get_date>")]
-fn get_todo_by_date(get_date: u32) -> content::Json<&'static str> {
+fn get_todo_by_date(get_date: i32) -> content::Json<&'static str> {
     content::Json("{ 'hi': 'todo get_date' }")
 }*/
 
-#[post("/todo", format = "application/json")]
-fn post_todo() -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'todo' }")
-}
-
-#[put("/todo", data = "<new_todo>")]
+#[post("/todo", data = "<new_todo>")]
 fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
     let result = diesel::insert_into(todo::table)
         .values(&new_todo.0)
@@ -75,9 +74,15 @@ fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
     Json(result)
 }
 
+#[put("/todo", format = "application/json")]
+fn post_todo() -> Json<&'static str> {
+    Json("{ 'hi': 'todo' }")
+}
+
+
 #[delete("/todo/<id>")]
-fn delete_todo(id: u32) -> content::Json<&'static str> {
-        content::Json("{ 'hi': 'todo' }")
+fn delete_todo(id: i32) -> Json<&'static str> {
+        Json("{ 'hi': 'todo' }")
 }
 
 fn main() {
