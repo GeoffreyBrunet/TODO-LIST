@@ -29,7 +29,10 @@ struct Todo {
 #[derive(Insertable, Deserialize)]
 #[table_name = "todo"]
 struct NewTodo {
-    title: String
+    title: String,
+    description: Option<String>,
+    deadline: Option<String>,
+    done: Option<bool>
 }
 
 #[get("/")]
