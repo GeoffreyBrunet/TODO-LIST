@@ -22,7 +22,7 @@ struct Todo {
     id: i32,
     title: String,
     description: String,
-    deadline: String,
+    deadline: i32,
     done: bool
 }
 
@@ -31,7 +31,7 @@ struct Todo {
 struct NewTodo {
     title: String,
     description: Option<String>,
-    deadline: Option<String>,
+    deadline: i32,
     done: Option<bool>
 }
 
