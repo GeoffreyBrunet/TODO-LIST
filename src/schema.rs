@@ -1,9 +1,9 @@
 table! {
-    todolist (id) {
+    todo (id) {
         id -> Int4,
         title -> Varchar,
         description -> Varchar,
-        deadline -> Date,
-        done -> Int4,
+        deadline -> Varchar,
+        done -> Bool,
     }
 }

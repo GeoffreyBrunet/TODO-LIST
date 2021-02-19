@@ -5,7 +5,7 @@ extern crate rocket_contrib;
 
 mod schema;
 
-use crate::schema::todolist;
+use crate::schema::todo;
 use rocket::{get, post, put, routes};
 use rocket::response::content;
 use rocket_contrib::json::Json;
@@ -27,7 +27,7 @@ struct Todo {
 }
 
 #[derive(Insertable, Deserialize)]
-#[table_name = "todolist"]
+#[table_name = "todo"]
 struct NewTodo {
     title: String
 }
@@ -59,12 +59,13 @@ fn post_todo() -> content::Json<&'static str> {
     content::Json("{ 'hi': 'todo' }")
 }
 
-#[put("/todo", data = "new_todo")]
+#[put("/todo", data = "<new_todo>")]
 fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
     let result = diesel::insert_into(todo::table)
         .values(&new_todo.0)
-        .get_result(&*Conn)
+        .get_result(&*conn)
         .unwrap();
+    Json(result)
 }
 
 #[delete("/todo/<id>")]
