@@ -5,6 +5,8 @@ extern crate rocket_contrib;
 
 mod schema;
 
+use std::ops::{Deref, DerefMut};
+
 use crate::schema::todo;
 use rocket::{get, post, put, routes};
 use rocket_contrib::json::Json;
@@ -17,7 +19,7 @@ use serde::{Serialize, Deserialize};
 struct DbConn(PgConnection);
 
 #[derive(Queryable, Serialize)]
-struct Todo {
+pub struct Todo {
     id: i32,
     title: String,
     description: String,
@@ -25,9 +27,9 @@ struct Todo {
     done: bool
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable, Serialize, Deserialize, AsChangeset, Clone)]
 #[table_name = "todo"]
-struct NewTodo {
+pub struct NewTodo {
     title: String,
     description: Option<String>,
     deadline: i32,
@@ -60,13 +62,17 @@ fn get_todo_by_id(conn: DbConn, id: i32) -> Json<Vec<Todo>> {
 
 // GET /todo?date=20210215
 
-/*#[get("/todo?date=<get_date>")]
-fn get_todo_by_date(get_date: i32) -> content::Json<&'static str> {
-    content::Json("{ 'hi': 'todo get_date' }")
-}*/
+#[get("/todo/<get_date>")]
+fn get_todo_by_date(conn: DbConn, get_date: i32) -> Json<Vec<Todo>> {
+    let todos = todo::table
+        .filter(todo::deadline.eq(get_date))
+        .load::<Todo>(&*conn)
+        .unwrap();
+    Json(todos)
+}
 
-#[post("/todo", data = "<new_todo>")]
-fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
+#[post("/todo", format = "application/json", data = "<new_todo>")]
+fn post_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
     let result = diesel::insert_into(todo::table)
         .values(&new_todo.0)
         .get_result(&*conn)
@@ -74,15 +80,22 @@ fn put_todo(conn: DbConn, new_todo: Json<NewTodo>) -> Json<Todo> {
     Json(result)
 }
 
-#[put("/todo", format = "application/json")]
-fn post_todo() -> Json<&'static str> {
-    Json("{ 'hi': 'todo' }")
+#[put("/todo/<id>", format = "application/json", data = "<mod_todo>")]
+fn put_todo(conn: DbConn, id: i32, mod_todo: Json<NewTodo>) -> Json<bool> {
+    //let new_mod_todo =  mod_todo.deref()
+    let result = diesel::update(todo::table.find(id))
+        .set(&mod_todo.0)
+        .get_result::<Todo>(&*conn)
+        .is_ok();
+    Json(result)
 }
 
-
 #[delete("/todo/<id>")]
-fn delete_todo(id: i32) -> Json<&'static str> {
-        Json("{ 'hi': 'todo' }")
+fn delete_todo(conn: DbConn, id: i32) -> Json<bool> {
+    let result = diesel::delete(todo::table.find(id))
+        .execute(&*conn)
+        .is_ok();
+    Json(result)
 }
 
 fn main() {
