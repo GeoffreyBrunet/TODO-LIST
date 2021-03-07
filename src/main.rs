@@ -5,10 +5,8 @@ extern crate rocket_contrib;
 
 mod schema;
 
-use std::ops::{Deref, DerefMut};
-
 use crate::schema::todo;
-use rocket::{get, post, put, routes};
+use rocket::{get, post, put, routes, Request};
 use rocket_contrib::json::Json;
 use rocket_contrib::databases::{database, diesel::PgConnection};
 use diesel::{Queryable, Insertable};
@@ -60,12 +58,11 @@ fn get_todo_by_id(conn: DbConn, id: i32) -> Json<Vec<Todo>> {
     Json(todos)
 }
 
-// GET /todo?date=20210215
-
-#[get("/todo/<get_date>")]
-fn get_todo_by_date(conn: DbConn, get_date: i32) -> Json<Vec<Todo>> {
+#[get("/todo/<deadline>")]
+fn get_todo_by_date(conn: DbConn, deadline: i32) -> Json<Vec<Todo>> {
     let todos = todo::table
-        .filter(todo::deadline.eq(get_date))
+        .order(todo::columns::deadline.desc())
+        .filter(todo::deadline.eq(deadline))
         .load::<Todo>(&*conn)
         .unwrap();
     Json(todos)
@@ -96,6 +93,11 @@ fn delete_todo(conn: DbConn, id: i32) -> Json<bool> {
         .execute(&*conn)
         .is_ok();
     Json(result)
+}
+
+#[catch(404)]
+fn not_found(req: &Request) -> String {
+    format!("Sorry, '{}' is not a valid path.", req.uri())
 }
 
 fn main() {
