@@ -106,6 +106,7 @@ fn main() {
         .mount("/", routes![index,
         get_todo,
         get_todo_by_id,
+        get_todo_by_date,
         post_todo,
         put_todo,
         delete_todo])
