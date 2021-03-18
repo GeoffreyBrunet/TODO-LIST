@@ -1,6 +1,18 @@
 # TODO-LIST
 Todo List app in rust with Rocket &amp; Diesel
 
+## Migrate database
+I have used PostgreSQL in version 12, install on ubuntu on my laptop.  
+Export database:
+```shell
+pg_dump -U postgres -h localhost -p 5432 -d todo-bdd > dbexport.pgsql
+```
+
+Import database:
+```shell
+pg_dump -U postgres -h localhost -p 5432 -d todo-bdd < dbexport.pgsql
+```
+
 ## Install and run project
 
 ### Install rust:
