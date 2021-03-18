@@ -8,7 +8,7 @@ Export database:
 pg_dump -U postgres -h localhost -p 5432 -d todo-bdd > dbexport.pgsql
 ```
 
-Import database:
+Import database, go in export-bdd and run this following command:
 ```shell
 pg_dump -U postgres -h localhost -p 5432 -d todo-bdd < dbexport.pgsql
 ```
