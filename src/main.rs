@@ -58,11 +58,11 @@ fn get_todo_by_id(conn: DbConn, id: i32) -> Json<Vec<Todo>> {
     Json(todos)
 }
 
-#[get("/todo/<deadline>")]
-fn get_todo_by_date(conn: DbConn, deadline: i32) -> Json<Vec<Todo>> {
+#[get("/todo/date/<deadline_date>")]
+fn get_todo_by_date(conn: DbConn, deadline_date: i32) -> Json<Vec<Todo>> {
     let todos = todo::table
         .order(todo::columns::deadline.desc())
-        .filter(todo::deadline.eq(deadline))
+        .filter(todo::deadline.eq(deadline_date))
         .load::<Todo>(&*conn)
         .unwrap();
     Json(todos)
